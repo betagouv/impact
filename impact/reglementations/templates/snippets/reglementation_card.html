@@ -11,7 +11,7 @@
                     <li>
                         {% if reglementation.status == reglementation.STATUS_NON_SOUMIS %}
                         <p class="fr-badge">non soumis</p>
-                        {% elif not user.is_authenticated %}
+                        {% elif reglementation.status == reglementation.STATUS_SOUMIS %}
                         <p class="fr-badge">soumis</p>
                         {% elif reglementation.status == reglementation.STATUS_A_ACTUALISER %}
                         <p class="fr-badge fr-badge--error fr-badge--no-icon">à actualiser</p>

@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.auth.models import AnonymousUser
 
 from entreprises.models import Entreprise
 from reglementations.views import BDESEReglementation, IndexEgaproReglementation
@@ -48,7 +49,7 @@ def test_public_reglementations_with_entreprise_data(client):
     context_entreprise = context["entreprises"][0]
     assert context_entreprise["entreprise"] == entreprise
     assert context_entreprise["reglementations"][0] == BDESEReglementation.calculate(
-        entreprise, 2022
+        entreprise, 2022, AnonymousUser()
     )
     assert context_entreprise["reglementations"][
         1
@@ -69,7 +70,8 @@ def entreprise(db, django_user_model):
 
 
 def test_reglementations_with_authenticated_user(client, entreprise):
-    client.force_login(entreprise.users.first())
+    user = entreprise.users.first()
+    client.force_login(user)
 
     response = client.get("/reglementations")
 
@@ -80,7 +82,7 @@ def test_reglementations_with_authenticated_user(client, entreprise):
     context_entreprise = context["entreprises"][0]
     assert context_entreprise["entreprise"] == entreprise
     assert context_entreprise["reglementations"][0] == BDESEReglementation.calculate(
-        entreprise, 2022
+        entreprise, 2022, user
     )
     assert context_entreprise["reglementations"][
         1
