@@ -16,6 +16,7 @@
         <title>Impact</title>
     </head>
     <body>
+        <div id="app"></div>
         {% block header %}
         <header role="banner" class="fr-header">
             <div class="fr-header__body">
@@ -157,6 +158,8 @@
         <!-- Script en version es6 module et nomodule pour les navigateurs le ne supportant pas -->
         <script type="module" src="{% static 'dsfr-1.7.2/dsfr/dsfr.module.min.js' %}"></script>
         <script type="text/javascript" nomodule src="{% static 'dsfr-1.7.2/dsfr/dsfr.nomodule.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'svelte/assets/index-e40df3f7.js' %}"></script>
+
         <!-- Matomo -->
         <script>
             var _paq = window._paq = window._paq || [];
