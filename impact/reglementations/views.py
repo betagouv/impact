@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import requests
@@ -30,7 +31,7 @@ class ReglementationAction:
 
 
 @dataclass
-class Reglementation:
+class Reglementation(ABC):
     STATUS_A_JOUR = "à jour"
     STATUS_A_ACTUALISER = "à actualiser"
     STATUS_EN_COURS = "en cours"
@@ -41,6 +42,38 @@ class Reglementation:
     status_detail: str | None = None
     primary_action: ReglementationAction | None = None
     secondary_actions: list[ReglementationAction] = field(default_factory=list)
+
+    @staticmethod
+    @abstractmethod
+    def est_soumise(entreprise: Entreprise) -> bool:
+        pass
+
+    @classmethod
+    def calculate(
+        cls, entreprise: Entreprise, user: settings.AUTH_USER_MODEL
+    ) -> "Reglementation":
+        if not user.is_authenticated:
+            if cls.est_soumise(entreprise):
+                status = cls.STATUS_SOUMIS
+                status_detail = "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus."
+                primary_action = ReglementationAction(
+                    reverse("login") + "?next=/reglementations",
+                    "Se connecter",
+                )
+            else:
+                status = cls.STATUS_NON_SOUMIS
+                status_detail = "Vous n'êtes pas soumis à cette réglementation."
+                primary_action = None
+            return cls(status, status_detail, primary_action=primary_action)
+
+        elif not user_is_authorized(user, entreprise):
+            if cls.est_soumise(entreprise):
+                status = cls.STATUS_SOUMIS
+                status_detail = "L'entreprise est soumise à cette réglementation."
+            else:
+                status = cls.STATUS_NON_SOUMIS
+                status_detail = "L'entreprise n'est pas soumise à cette réglementation."
+            return cls(status, status_detail)
 
 
 def user_is_authorized(user: settings.AUTH_USER_MODEL, entreprise: Entreprise) -> bool:
@@ -85,103 +118,79 @@ class BDESEReglementation(Reglementation):
     def calculate(
         cls, entreprise: Entreprise, annee: int, user: settings.AUTH_USER_MODEL
     ) -> "BDESEReglementation":
-        if not user.is_authenticated:
-            if cls.est_soumise(entreprise):
-                status = cls.STATUS_SOUMIS
-                status_detail = "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus et actualiser votre BDESE."
-                primary_action = ReglementationAction(
-                    reverse("login") + "?next=/reglementations",
-                    "Se connecter",
-                )
-            else:
-                status = cls.STATUS_NON_SOUMIS
-                status_detail = "Vous n'êtes pas soumis à cette réglementation."
-                primary_action = None
-            return cls(status, status_detail, primary_action=primary_action)
 
-        elif not user_is_authorized(user, entreprise):
-            if cls.est_soumise(entreprise):
-                status = cls.STATUS_SOUMIS
-                status_detail = "L'entreprise est soumise à cette réglementation."
-            else:
-                status = cls.STATUS_NON_SOUMIS
-                status_detail = "L'entreprise n'est pas soumise à cette réglementation."
+        if not user.is_authenticated or not user_is_authorized(user, entreprise):
+            return super().calculate(entreprise, user)
+
+        if not cls.est_soumise(entreprise):
+            status = cls.STATUS_NON_SOUMIS
+            status_detail = "Vous n'êtes pas soumis à cette réglementation."
             return cls(status, status_detail)
-
+        elif entreprise.bdese_accord:
+            status = cls.STATUS_A_ACTUALISER
+            status_detail = "Vous êtes soumis à cette réglementation. Vous avez un accord d'entreprise spécifique. Veuillez vous y référer."
+            primary_action = ReglementationAction(
+                "#", "Marquer ma BDESE comme actualisée"
+            )
+            return cls(
+                status,
+                status_detail,
+                primary_action=primary_action,
+            )
         else:
-            if not cls.est_soumise(entreprise):
-                status = cls.STATUS_NON_SOUMIS
-                status_detail = "Vous n'êtes pas soumis à cette réglementation."
-                return cls(status, status_detail)
-            elif entreprise.bdese_accord:
-                status = cls.STATUS_A_ACTUALISER
-                status_detail = "Vous êtes soumis à cette réglementation. Vous avez un accord d'entreprise spécifique. Veuillez vous y référer."
-                primary_action = ReglementationAction(
-                    "#", "Marquer ma BDESE comme actualisée"
-                )
-                return cls(
-                    status,
-                    status_detail,
-                    primary_action=primary_action,
-                )
-            else:
-                bdese_class = (
-                    BDESE_50_300
-                    if cls.bdese_type(entreprise) == cls.TYPE_INFERIEUR_300
-                    else BDESE_300
-                )
-                bdese = bdese_class.objects.filter(
-                    entreprise__siren=entreprise.siren, annee=annee
-                )
-                if bdese:
-                    bdese = bdese[0]
-                    if bdese.is_complete:
-                        status = cls.STATUS_A_JOUR
-                        status_detail = "Vous êtes soumis à cette réglementation. Vous avez actualisé votre BDESE sur la plateforme."
-                        primary_action = ReglementationAction(
-                            reverse_lazy("bdese_pdf", args=[entreprise.siren, annee]),
-                            "Télécharger le pdf",
-                            external=True,
-                        )
-                        secondary_actions = [
-                            ReglementationAction(
-                                reverse_lazy(
-                                    "bdese", args=[entreprise.siren, annee, 1]
-                                ),
-                                "Modifier ma BDESE",
-                            )
-                        ]
-                    else:
-                        status = cls.STATUS_EN_COURS
-                        status_detail = "Vous êtes soumis à cette réglementation. Vous avez démarré le remplissage de votre BDESE sur la plateforme."
-                        primary_action = ReglementationAction(
-                            reverse_lazy("bdese", args=[entreprise.siren, annee, 1]),
-                            "Reprendre l'actualisation de ma BDESE",
-                        )
-                        secondary_actions = [
-                            ReglementationAction(
-                                reverse_lazy(
-                                    "bdese_pdf", args=[entreprise.siren, annee]
-                                ),
-                                "Télécharger le pdf (brouillon)",
-                                external=True,
-                            ),
-                        ]
-                else:
-                    status = cls.STATUS_A_ACTUALISER
-                    status_detail = "Vous êtes soumis à cette réglementation. Nous allons vous aider à la remplir."
+            bdese_class = (
+                BDESE_50_300
+                if cls.bdese_type(entreprise) == cls.TYPE_INFERIEUR_300
+                else BDESE_300
+            )
+            bdese = bdese_class.objects.filter(
+                entreprise__siren=entreprise.siren, annee=annee
+            )
+            if bdese:
+                bdese = bdese[0]
+                if bdese.is_complete:
+                    status = cls.STATUS_A_JOUR
+                    status_detail = "Vous êtes soumis à cette réglementation. Vous avez actualisé votre BDESE sur la plateforme."
                     primary_action = ReglementationAction(
-                        reverse_lazy("bdese", args=[entreprise.siren, annee, 0]),
-                        "Actualiser ma BDESE",
+                        reverse_lazy("bdese_pdf", args=[entreprise.siren, annee]),
+                        "Télécharger le pdf",
+                        external=True,
                     )
-                    secondary_actions = []
-
-                return cls(
-                    status,
-                    status_detail,
-                    primary_action=primary_action,
-                    secondary_actions=secondary_actions,
+                    secondary_actions = [
+                        ReglementationAction(
+                            reverse_lazy("bdese", args=[entreprise.siren, annee, 1]),
+                            "Modifier ma BDESE",
+                        )
+                    ]
+                else:
+                    status = cls.STATUS_EN_COURS
+                    status_detail = "Vous êtes soumis à cette réglementation. Vous avez démarré le remplissage de votre BDESE sur la plateforme."
+                    primary_action = ReglementationAction(
+                        reverse_lazy("bdese", args=[entreprise.siren, annee, 1]),
+                        "Reprendre l'actualisation de ma BDESE",
+                    )
+                    secondary_actions = [
+                        ReglementationAction(
+                            reverse_lazy("bdese_pdf", args=[entreprise.siren, annee]),
+                            "Télécharger le pdf (brouillon)",
+                            external=True,
+                        ),
+                    ]
+            else:
+                status = cls.STATUS_A_ACTUALISER
+                status_detail = "Vous êtes soumis à cette réglementation. Nous allons vous aider à la remplir."
+                primary_action = ReglementationAction(
+                    reverse_lazy("bdese", args=[entreprise.siren, annee, 0]),
+                    "Actualiser ma BDESE",
                 )
+                secondary_actions = []
+
+            return cls(
+                status,
+                status_detail,
+                primary_action=primary_action,
+                secondary_actions=secondary_actions,
+            )
 
 
 @dataclass
@@ -201,45 +210,18 @@ class IndexEgaproReglementation(Reglementation):
     def calculate(
         cls, entreprise: Entreprise, user: settings.AUTH_USER_MODEL
     ) -> "IndexEgaproReglementations":
+        if not user.is_authenticated or not user_is_authorized(user, entreprise):
+            return super().calculate(entreprise, user)
+
         EgaProAction = ReglementationAction(
             "https://egapro.travail.gouv.fr/",
             "Calculer et déclarer mon index sur Egapro",
             external=True,
         )
 
-        if not user.is_authenticated:
-            if cls.est_soumise(entreprise):
-                status = cls.STATUS_SOUMIS
-                status_detail = "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus."
-                primary_action = ReglementationAction(
-                    reverse("login") + "?next=/reglementations",
-                    "Se connecter",
-                )
-                secondary_actions = [EgaProAction]
-                return cls(
-                    status,
-                    status_detail,
-                    primary_action=primary_action,
-                    secondary_actions=secondary_actions,
-                )
-            else:
-                status = cls.STATUS_NON_SOUMIS
-                status_detail = "Vous n'êtes pas soumis à cette réglementation."
-                return cls(status, status_detail)
-
-        elif not user_is_authorized(user, entreprise):
-            if cls.est_soumise(entreprise):
-                status = cls.STATUS_SOUMIS
-                status_detail = "L'entreprise est soumise à cette réglementation."
-            else:
-                status = cls.STATUS_NON_SOUMIS
-                status_detail = "L'entreprise n'est pas soumise à cette réglementation."
-            return cls(status, status_detail)
-
         if not cls.est_soumise(entreprise):
             status = cls.STATUS_NON_SOUMIS
             status_detail = "Vous n'êtes pas soumis à cette réglementation."
-            return cls(status, status_detail)
         elif is_index_egapro_updated(entreprise):
             status = cls.STATUS_A_JOUR
             status_detail = "Vous êtes soumis à cette réglementation. Vous avez rempli vos obligations d'après les données disponibles sur la plateforme Egapro."

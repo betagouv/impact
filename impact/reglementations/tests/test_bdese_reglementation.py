@@ -99,7 +99,7 @@ def test_calculate_bdese_reglementation_with_anonymous_user(mocker, entreprise_f
     assert bdese.status == BDESEReglementation.STATUS_SOUMIS
     assert (
         bdese.status_detail
-        == "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus et actualiser votre BDESE."
+        == "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus."
     )
     assert bdese.primary_action.title == "Se connecter"
     assert bdese.primary_action.url == reverse("login") + "?next=/reglementations"

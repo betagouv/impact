@@ -3,6 +3,7 @@ import json
 import freezegun
 import pytest
 from django.contrib.auth.models import AnonymousUser
+from django.urls import reverse
 
 from reglementations.views import IndexEgaproReglementation, is_index_egapro_updated
 
@@ -38,6 +39,8 @@ def test_calculate_with_anonymous_user(mocker, entreprise_factory, mock_index_eg
 
     assert index.status == IndexEgaproReglementation.STATUS_NON_SOUMIS
     assert index.status_detail == "Vous n'êtes pas soumis à cette réglementation."
+    assert not index.primary_action
+    assert not index.secondary_actions
 
     mocker.patch(
         "reglementations.views.IndexEgaproReglementation.est_soumise", return_value=True
@@ -49,6 +52,9 @@ def test_calculate_with_anonymous_user(mocker, entreprise_factory, mock_index_eg
         index.status_detail
         == "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus."
     )
+    assert index.primary_action.title == "Se connecter"
+    assert index.primary_action.url == reverse("login") + "?next=/reglementations"
+    assert not index.secondary_actions
 
     assert not mock_index_egapro.called
 
