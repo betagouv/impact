@@ -2,6 +2,7 @@ import json
 
 import freezegun
 import pytest
+from django.contrib.auth.models import AnonymousUser
 
 from reglementations.views import IndexEgaproReglementation, is_index_egapro_updated
 
@@ -21,29 +22,75 @@ def test_default_index_egapro_reglementation():
 
     assert index.status is None
     assert index.status_detail is None
-    assert index.primary_action.url == "https://egapro.travail.gouv.fr/"
-    assert index.primary_action.title == "Calculer et déclarer mon index sur Egapro"
-    assert index.primary_action.external == True
+    assert index.primary_action is None
+    assert index.secondary_actions == []
 
 
-def test_calculate_less_than_50_employees(entreprise_factory, mock_index_egapro):
-    entreprise = entreprise_factory(effectif="petit")
+def test_calculate_with_anonymous_user(mocker, entreprise_factory, mock_index_egapro):
+    entreprise = entreprise_factory()
+    user = AnonymousUser()
 
-    index = IndexEgaproReglementation.calculate(entreprise)
+    mocker.patch(
+        "reglementations.views.IndexEgaproReglementation.est_soumise",
+        return_value=False,
+    )
+    index = IndexEgaproReglementation.calculate(entreprise, user)
 
     assert index.status == IndexEgaproReglementation.STATUS_NON_SOUMIS
-    assert index.status_detail == "Vous n'êtes pas soumis à cette réglementation"
+    assert index.status_detail == "Vous n'êtes pas soumis à cette réglementation."
+
+    mocker.patch(
+        "reglementations.views.IndexEgaproReglementation.est_soumise", return_value=True
+    )
+    index = IndexEgaproReglementation.calculate(entreprise, user)
+
+    assert index.status == IndexEgaproReglementation.STATUS_SOUMIS
+    assert (
+        index.status_detail
+        == "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus."
+    )
+
+    assert not mock_index_egapro.called
+
+
+def test_calculate_less_than_50_employees(
+    entreprise_factory, mock_index_egapro, django_user_model
+):
+    entreprise = entreprise_factory(effectif="petit")
+    user = django_user_model.objects.create()
+
+    index = IndexEgaproReglementation.calculate(entreprise, user)
+
+    assert index.status == IndexEgaproReglementation.STATUS_NON_SOUMIS
+    assert (
+        index.status_detail == "L'entreprise n'est pas soumise à cette réglementation."
+    )
+
+    entreprise.users.add(user)
+    index = IndexEgaproReglementation.calculate(entreprise, user)
+
+    assert index.status == IndexEgaproReglementation.STATUS_NON_SOUMIS
+    assert index.status_detail == "Vous n'êtes pas soumis à cette réglementation."
+
     assert not mock_index_egapro.called
 
 
 @pytest.mark.parametrize("effectif", ["moyen", "grand", "sup500"])
 def test_calculate_more_than_50_employees(
-    effectif, entreprise_factory, mock_index_egapro
+    effectif, entreprise_factory, mock_index_egapro, django_user_model
 ):
     entreprise = entreprise_factory(effectif=effectif)
-    mock_index_egapro.return_value = False
+    user = django_user_model.objects.create()
 
-    index = IndexEgaproReglementation.calculate(entreprise)
+    index = IndexEgaproReglementation.calculate(entreprise, user)
+
+    assert index.status == IndexEgaproReglementation.STATUS_SOUMIS
+    assert index.status_detail == "L'entreprise est soumise à cette réglementation."
+    assert not mock_index_egapro.called
+
+    entreprise.users.add(user)
+    mock_index_egapro.return_value = False
+    index = IndexEgaproReglementation.calculate(entreprise, user)
 
     assert index.status == IndexEgaproReglementation.STATUS_A_ACTUALISER
     assert (
@@ -53,8 +100,7 @@ def test_calculate_more_than_50_employees(
     assert mock_index_egapro.called_once_with(entreprise)
 
     mock_index_egapro.return_value = True
-
-    index = IndexEgaproReglementation.calculate(entreprise)
+    index = IndexEgaproReglementation.calculate(entreprise, user)
 
     assert index.status == IndexEgaproReglementation.STATUS_A_JOUR
     assert (

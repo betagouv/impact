@@ -53,7 +53,7 @@ def test_public_reglementations_with_entreprise_data(client):
     )
     assert context_entreprise["reglementations"][
         1
-    ] == IndexEgaproReglementation.calculate(entreprise)
+    ] == IndexEgaproReglementation.calculate(entreprise, AnonymousUser())
 
 
 @pytest.fixture
@@ -86,7 +86,7 @@ def test_reglementations_with_authenticated_user(client, entreprise):
     )
     assert context_entreprise["reglementations"][
         1
-    ] == IndexEgaproReglementation.calculate(entreprise)
+    ] == IndexEgaproReglementation.calculate(entreprise, user)
 
 
 def test_reglementations_with_authenticated_user_and_another_entreprise_data(

@@ -39,9 +39,11 @@ class Reglementation:
 
     status: str | None = None
     status_detail: str | None = None
+    primary_action: ReglementationAction | None = None
+    secondary_actions: list[ReglementationAction] = field(default_factory=list)
 
 
-def user_is_authorized(user, entreprise):
+def user_is_authorized(user: settings.AUTH_USER_MODEL, entreprise: Entreprise) -> bool:
     return user in entreprise.users.all()
 
 
@@ -57,9 +59,6 @@ class BDESEReglementation(Reglementation):
         La BDESE rassemble les informations sur les grandes orientations économiques et sociales de l'entreprise.
         Elle comprend des mentions obligatoires qui varient selon l'effectif de l'entreprise."""
     more_info_url = "https://entreprendre.service-public.fr/vosdroits/F32193"
-
-    primary_action: ReglementationAction | None = None
-    secondary_actions: list[ReglementationAction] = field(default_factory=list)
 
     @staticmethod
     def est_soumise(entreprise: Entreprise) -> bool:
@@ -190,24 +189,64 @@ class IndexEgaproReglementation(Reglementation):
     title = "Index de l’égalité professionnelle"
     description = "Afin de lutter contre les inégalités salariales entre les femmes et les hommes, certaines entreprises doivent calculer et transmettre un index mesurant l’égalité salariale au sein de leur structure."
     more_info_url = "https://www.economie.gouv.fr/entreprises/index-egalite-professionnelle-obligatoire"
-    primary_action = ReglementationAction(
-        "https://egapro.travail.gouv.fr/",
-        "Calculer et déclarer mon index sur Egapro",
-        external=True,
-    )
+
+    @staticmethod
+    def est_soumise(entreprise: Entreprise) -> bool:
+        if entreprise.effectif == "petit":
+            return False
+        else:
+            return True
 
     @classmethod
-    def calculate(cls, entreprise: Entreprise) -> "IndexEgaproReglementations":
-        if entreprise.effectif == "petit":
+    def calculate(
+        cls, entreprise: Entreprise, user: settings.AUTH_USER_MODEL
+    ) -> "IndexEgaproReglementations":
+        EgaProAction = ReglementationAction(
+            "https://egapro.travail.gouv.fr/",
+            "Calculer et déclarer mon index sur Egapro",
+            external=True,
+        )
+
+        if not user.is_authenticated:
+            if cls.est_soumise(entreprise):
+                status = cls.STATUS_SOUMIS
+                status_detail = "Vous êtes soumis à cette réglementation. Connectez-vous pour en savoir plus."
+                primary_action = ReglementationAction(
+                    reverse("login") + "?next=/reglementations",
+                    "Se connecter",
+                )
+                secondary_actions = [EgaProAction]
+                return cls(
+                    status,
+                    status_detail,
+                    primary_action=primary_action,
+                    secondary_actions=secondary_actions,
+                )
+            else:
+                status = cls.STATUS_NON_SOUMIS
+                status_detail = "Vous n'êtes pas soumis à cette réglementation."
+                return cls(status, status_detail)
+
+        elif not user_is_authorized(user, entreprise):
+            if cls.est_soumise(entreprise):
+                status = cls.STATUS_SOUMIS
+                status_detail = "L'entreprise est soumise à cette réglementation."
+            else:
+                status = cls.STATUS_NON_SOUMIS
+                status_detail = "L'entreprise n'est pas soumise à cette réglementation."
+            return cls(status, status_detail)
+
+        if not cls.est_soumise(entreprise):
             status = cls.STATUS_NON_SOUMIS
-            status_detail = "Vous n'êtes pas soumis à cette réglementation"
+            status_detail = "Vous n'êtes pas soumis à cette réglementation."
+            return cls(status, status_detail)
         elif is_index_egapro_updated(entreprise):
             status = cls.STATUS_A_JOUR
             status_detail = "Vous êtes soumis à cette réglementation. Vous avez rempli vos obligations d'après les données disponibles sur la plateforme Egapro."
         else:
             status = cls.STATUS_A_ACTUALISER
             status_detail = "Vous êtes soumis à cette réglementation. Vous n'avez pas encore déclaré votre index sur la plateforme Egapro."
-        return cls(status, status_detail)
+        return cls(status, status_detail, primary_action=EgaProAction)
 
 
 def is_index_egapro_updated(entreprise: Entreprise) -> bool:
@@ -260,7 +299,7 @@ def reglementations(request):
                         )
                         if entreprise
                         else BDESEReglementation(),
-                        IndexEgaproReglementation.calculate(entreprise)
+                        IndexEgaproReglementation.calculate(entreprise, request.user)
                         if entreprise
                         else IndexEgaproReglementation(),
                     ],
