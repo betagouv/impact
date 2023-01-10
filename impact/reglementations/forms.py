@@ -82,6 +82,9 @@ class CategoryJSONWidget(forms.MultiWidget):
             return []
         return [value.get(category) for category in self.categories]
 
+    def id_for_label(self, id_):
+        return id_
+
 
 def bdese_form_factory(
     bdese,
