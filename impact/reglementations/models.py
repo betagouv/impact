@@ -80,6 +80,9 @@ class AbstractBDESE(models.Model):
         null=True,
         blank=True,
     )
+    indicateurs_externes = models.JSONField(
+        default=list,
+    )
 
     class Meta:
         abstract = True
