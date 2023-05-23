@@ -14,8 +14,18 @@
                 {% csrf_token %}
                 {{ form.siren.as_hidden }}
                 {{ form.denomination.as_hidden }}
-                {% include 'snippets/field.html' with field=form.effectif %}
+              {#  {% include 'snippets/field.html' with field=form.effectif %} #}
+                {% include 'snippets/field.html' with field=form.cotee %}
+                {% include 'snippets/field.html' with field=form.bilan %}
+                {% include 'snippets/field.html' with field=form.ca_net %}
+                {% include 'snippets/field.html' with field=form.nombre_moyen_de_salaries_employes_au_cours_d_exercice %}
+                {% include 'snippets/field.html' with field=form.nombre_moyen_de_salaries_permanents %}
+                {% include 'snippets/field.html' with field=form.appartient_a_un_groupe_de_societes_dont_la_societe_mere_a_son_siege_social_en_France_et_effectif_500_salaries %}
+                {% include 'snippets/field.html' with field=form.nombre_salaries_fr %}
+                {% include 'snippets/field.html' with field=form.nombre_salaries_monde %}
                 {% include 'snippets/field.html' with field=form.bdese_accord %}
+                {% include 'snippets/field.html' with field=form.plan_de_vigilance %}
+                {% include 'snippets/field.html' with field=form.systeme_management_energie %}
                 <div class="fr-pt-3w">
                     <input type="submit" value="Vérifier mes obligations" class="fr-btn">
                 </div>

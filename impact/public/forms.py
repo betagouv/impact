@@ -18,6 +18,32 @@ class EligibiliteForm(DsfrForm, forms.ModelForm):
         model = Entreprise
         fields = ["effectif", "bdese_accord", "denomination", "siren"]
 
+
+    cotee = forms.BooleanField(label="Société côtée")
+    bilan = forms.IntegerField(label="Total bilan")
+    ca_net = forms.IntegerField(
+        label="Chiffre d'affaires net",
+    )
+    nombre_moyen_de_salaries_employes_au_cours_d_exercice = forms.IntegerField(
+        label="Nombre moyen de salariés (employés au cours de l'exercice)"
+    )
+    nombre_moyen_de_salaries_permanents = forms.IntegerField(
+        label="Nombre moyen de salariés permanents"
+    )
+    appartient_a_un_groupe_de_societes_dont_la_societe_mere_a_son_siege_social_en_France_et_effectif_500_salaries = forms.BooleanField()
+    nombre_salaries_fr = forms.IntegerField(
+        label="Nombre de salariés (société + filiales françaises directes et indirectes dont le siège social est fixé sur le territoire français)"
+    )
+    nombre_salaries_monde = forms.IntegerField(
+        label="Nombre de salariés (société + toutes filiales directes et indirectes)"
+    )
+    plan_de_vigilance = forms.BooleanField(
+        label="L'entreprise a mis en place d'un plan de vigilance relatif à l'activité de la société et de l'ensemble des filiales ou sociétés qu'elle contrôle"
+    )
+    systeme_management_energie = forms.BooleanField(
+        label="L'entreprise a mis en place d'un système de management de l'énergie"
+    )
+
     def clean_denomination(self):
         denomination = self.cleaned_data.get("denomination")
         return denomination[:DENOMINATION_MAX_LENGTH]
