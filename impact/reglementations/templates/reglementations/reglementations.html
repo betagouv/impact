@@ -10,14 +10,98 @@
             La liste des réglementations ci-dessous n’est pas encore complète et va s’enrichir progressivement. Le site actuel, encore au stade de prototype (bêta), sera amené à évoluer.
         </p>
     </div>
+</div>
+
+<div class="fr-container fr-my-8w">
+    <div class="fr-grid-row">
+        <div class="fr-col-12 fr-col-md-3">
+            <nav class="fr-sidemenu" aria-labelledby="fr-sidemenu-title">
+                <div class="fr-sidemenu__inner">
+                  <button
+                    class="fr-sidemenu__btn"
+                    hidden
+                    aria-controls="fr-sidemenu-wrapper"
+                    aria-expanded="false"
+                  >
+                    Dans cette rubrique
+                  </button>
+                  <div class="fr-collapse" id="fr-sidemenu-wrapper">
+                    <div class="fr-sidemenu__title" id="fr-sidemenu-title">Réglementations</div>
+                    <ul class="fr-sidemenu__list">
+                      <li class="fr-sidemenu__item fr-sidemenu__item--active">
+                        <a
+                          class="fr-sidemenu__link"
+                          href="#"
+                          target="_self"
+                          aria-current="page"
+                          >BDESE</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#" target="_self"
+                          >Égalité professionnelle</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#rapport-gestion" target="_self"
+                          >Rapport de gestion</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#rapport-gouvernement" target="_self"
+                          >Rapport sur le gouvernement d'entreprise</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#perf-extra-fin" target="_self"
+                          >Déclaration de performance extra-financière</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#dispositif-alerte" target="_self"
+                          >Dispositif d'alerte</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#dispositf-anti-corruption" target="_self"
+                          >Dispositif anti-corruption</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#plan-vigilance" target="_self"
+                          >Plan de vigilance</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#bges" target="_self"
+                          >BGES et plan de transition</a
+                        >
+                      </li>
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link" href="#audit-energetique" target="_self"
+                          >Audit énergétique</a
+                        >
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </nav>
+
+        </div>
+        <div class="fr-col">
 
     {% if entreprise.denomination %}<h2 class="fr-mt-4w">{{ entreprise.denomination }}</h2>{% endif %}
     {% for reglementation in reglementations %}
         {% include "snippets/reglementation_card.html" with reglementation=reglementation %}
     {% endfor %}
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+
+
+
+
+
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="rapport-gestion">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     Rapport de gestion
@@ -48,8 +132,8 @@
         </div>
     </div>
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="rapport-gouvernement">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     Rapport sur le gouvernement d'entreprise
@@ -80,8 +164,8 @@
         </div>
     </div>
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="perf-extra-fin">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     Déclaration de performance extra-financière
@@ -112,8 +196,8 @@
         </div>
     </div>
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="dispositif-alerte">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     Dispositif d'alerte
@@ -144,8 +228,8 @@
         </div>
     </div>
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="dispositf-anti-corruption">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     Dispositif anti-corruption
@@ -176,8 +260,8 @@
         </div>
     </div>
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="plan-vigilance">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     Plan de vigilance
@@ -208,8 +292,8 @@
         </div>
     </div>
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="bges">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     BGES et plan de transition
@@ -240,8 +324,8 @@
         </div>
     </div>
 
-    <div class="fr-card fr-card--horizontal  fr-mt-2w">
-        <div class="fr-card__body">
+    <div class="fr-card fr-card--horizontal fr-mt-2w" style="height: unset;">
+        <div class="fr-card__body" id="audit-energetique">
             <div class="fr-card__content">
                 <h3 class="fr-card__title">
                     Audit énergétique
@@ -274,6 +358,8 @@
 
 
 
+    </div>
+</div>
 
 </div>
 
