@@ -18,6 +18,22 @@ class EligibiliteForm(DsfrForm, forms.ModelForm):
         model = Entreprise
         fields = ["effectif", "bdese_accord", "denomination", "siren"]
 
+    forme_juridique = forms.ChoiceField(
+        choices=(
+            ('EI', 'Entreprise individuelle (EI)'),
+            ('EURL', 'Entreprise unipersonnelle à responsabilité limitée (EURL)'),
+            ('SA', 'Société anonyme (SA)'),
+            ('SARL', 'Société à responsabilité limitée (SARL)'),
+            ('SAS', 'Société par actions simplifiée (SAS)'),
+            ('SASU', 'Société par actions simplifiée unipersonnelle (SASU)'),
+            ('SCA', 'Société en commandite par actions (SCA)'),
+            ('Scop', 'Société coopérative de production (Scop)'),
+            ('SCS', 'Société en commandite simple (SCS)'),
+            ('SE', 'Société européenne (SE)'),
+            ('SNC', 'Société en nom collectif (SNC)'),
+            ('autre', 'Autre'),
+        )
+    )
     cotee = forms.BooleanField(label="Société côtée")
     bilan = forms.IntegerField(label="Total de bilan")
     ca_net = forms.IntegerField(
