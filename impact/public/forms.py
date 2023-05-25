@@ -19,7 +19,7 @@ class EligibiliteForm(DsfrForm, forms.ModelForm):
         fields = ["effectif", "bdese_accord", "denomination", "siren"]
 
     cotee = forms.BooleanField(label="Société côtée")
-    bilan = forms.IntegerField(label="Total bilan")
+    bilan = forms.IntegerField(label="Total de bilan")
     ca_net = forms.IntegerField(
         label="Chiffre d'affaires net",
     )
