@@ -259,7 +259,7 @@
 
 .rse-organizer--container {
     border-radius: .25rem;
-    padding: .5rem 1rem;
+    padding: .5rem;
     padding-bottom: 1rem;
 }
 
@@ -485,6 +485,23 @@ button.rse-organizer--card:hover, .rse-organizer--card:hover {
         overflow: auto;
         transition: visibility .3s;
         visibility: visible;
+    }
+    .dashboard .reglementation-grid {
+        display: flex;
+        flex-direction: column;
+    }
+    .dashboard .reglementation-header {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 100%;
+        grid-template-rows: auto auto;
+    }
+    .dashboard .reglementation-grid .fr-btns-group {
+        padding-top: 1em;
+        flex-flow: column;
+        align-items: start;
+        text-align: left;
+        justify-content: start;
     }
 }
 
