@@ -484,22 +484,24 @@ button.rse-organizer--card:hover, .rse-organizer--card:hover {
         transition: visibility .3s;
         visibility: visible;
     }
-    .dashboard .reglementation-grid {
-        display: flex;
-        flex-direction: column;
-    }
-    .dashboard .reglementation-header {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 100%;
-        grid-template-rows: auto auto;
-    }
-    .dashboard .reglementation-grid .fr-btns-group {
-        padding-top: 1em;
-        flex-flow: column;
-        align-items: start;
-        text-align: left;
-        justify-content: start;
+    .dashboard {
+        .reglementation-grid {
+            display: flex;
+            flex-direction: column;
+        }
+        .reglementation-header {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 100%;
+            grid-template-rows: auto auto;
+        }
+        .reglementation-grid .fr-btns-group {
+            padding-top: 1em;
+            flex-flow: column;
+            align-items: start;
+            text-align: left;
+            justify-content: start;
+        }
     }
 }
 
