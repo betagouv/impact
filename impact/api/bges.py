@@ -1,8 +1,10 @@
+from datetime import datetime
+
 import requests
 import sentry_sdk
 
 
-def last_reporting_year(siren):
+def last_reporting(siren):
     response = requests.get(
         "https://bilans-ges.ademe.fr/api/inventories",
         params={"page": "1", "itemsPerPage": "11", "entity.siren": siren},
@@ -15,10 +17,16 @@ def last_reporting_year(siren):
         data = response.json()
         if members := data["hydra:member"]:
             first_member = members[0]
-            last_year = first_member["identitySheet"]["reportingYear"]
+            last_reporting_year = first_member["identitySheet"]["reportingYear"]
+            publicated_at = first_member["publication"]["publicatedAt"]
             for member in members[1:]:
                 year = member["identitySheet"]["reportingYear"]
-                last_year = max(last_year, year)
-            return last_year
+                if year > last_reporting_year:
+                    last_reporting_year = year
+                    publicated_at = member["publication"]["publicatedAt"]
+            return {
+                "year": last_reporting_year,
+                "publication_date": datetime.fromisoformat(publicated_at).date(),
+            }
     except Exception as e:
         sentry_sdk.capture_exception(e)

@@ -460,7 +460,10 @@ def test_synchronise_les_reglementations_BGES(
         entreprise_soumise_a_jour,
     ):
         attach_user_to_entreprise(alice, entreprise, "Présidente")
-    mock_api_bges.side_effect = [2010, 2023]
+    mock_api_bges.side_effect = [
+        {"year": 2010, "publication_date": date(2011, 6, 30)},
+        {"year": 2023, "publication_date": date(2024, 6, 30)},
+    ]
 
     with freeze_time("2023-12-20"):
         Command().handle()
@@ -658,7 +661,10 @@ def test_synchronise_l_indicateur_d_impact_avec_des_entreprises_soumises_au_BGES
         # aucune entreprise à jour pour BDESE sur 2 soumises
         # une entreprise à jour pour BGES sur 2 soumises
         # la première a un dépôt trop ancien, la deuxième suffisamment récent
-        mock_api_bges.side_effect = [2010, 2023]
+        mock_api_bges.side_effect = [
+            {"year": 2010, "publication_date": date(2011, 6, 30)},
+            {"year": 2023, "publication_date": date(2024, 6, 30)},
+        ]
 
         Command().handle()
 
