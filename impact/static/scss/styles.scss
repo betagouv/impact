@@ -403,7 +403,7 @@ button.rse-organizer--card:hover, .rse-organizer--card:hover {
     }
     .reglementation-grid {
         .fr-btns-group {
-            flex-flow: row;
+            flex-flow: wrap;
             align-items: flex-start;
             grid-column: 2/3;
             grid-row: 1/2;
