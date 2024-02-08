@@ -90,7 +90,7 @@ def test_calculate_status_with_not_authenticated_user(
         assert status.status == ReglementationStatus.STATUS_SOUMIS
         assert (
             status.status_detail
-            == f'<a href="{login_url}">Vous êtes soumis à cette réglementation si RAISON. Connectez-vous pour en savoir plus.</a>'
+            == f'Vous êtes soumis à cette réglementation si RAISON. <a href="{login_url}">Connectez-vous pour en savoir plus.</a>'
         )
     else:
         assert status.status == ReglementationStatus.STATUS_NON_SOUMIS
