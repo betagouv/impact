@@ -80,12 +80,28 @@ def recherche(siren):
                 "Code pays étranger récupéré par l'API recherche entreprise invalide"
             )
             code_pays_etranger = None
+        try:
+            finance = data["finances"]
+            derniere_annee = max([annee for annee in finance.keys()])
+            chiffre_affaires_exact = finance[derniere_annee]["ca"]
+            if chiffre_affaires_exact < 900_000:  # 0-900k
+                chiffre_affaires = CaracteristiquesAnnuelles.CA_MOINS_DE_900K
+            elif chiffre_affaires_exact < 50_000_000:  # 900k-50M
+                chiffre_affaires = CaracteristiquesAnnuelles.CA_ENTRE_900K_ET_50M
+            elif chiffre_affaires_exact < 100_000_000:  # 50M-100M
+                chiffre_affaires = CaracteristiquesAnnuelles.CA_ENTRE_50M_ET_100M
+            else:  # 100M+
+                chiffre_affaires = CaracteristiquesAnnuelles.CA_100M_ET_PLUS
+        except ValueError:
+            chiffre_affaires = None
+
         return {
             "siren": siren,
             "effectif": effectif,
             "denomination": denomination,
             "categorie_juridique_sirene": categorie_juridique_sirene,
             "code_pays_etranger_sirene": code_pays_etranger,
+            "chiffre_affaires": chiffre_affaires,
         }
     elif response.status_code == 429:
         raise TooManyRequestError(TOO_MANY_REQUESTS_ERROR)

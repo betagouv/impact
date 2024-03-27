@@ -21,6 +21,7 @@ def test_api_fonctionnelle():
         "denomination": "DIRECTION INTERMINISTERIELLE DU NUMERIQUE",
         "categorie_juridique_sirene": 7120,
         "code_pays_etranger_sirene": None,
+        "chiffre_affaires": None,
     }
 
 
@@ -40,6 +41,7 @@ def test_succes_recherche_comportant_la_raison_sociale(mocker):
                         "tranche_effectif_salarie": "12",
                         "nature_juridique": "5710",
                         "siege": {"code_pays_etranger": "99139"},
+                        "finances": {},
                     }
                 ],
             }
@@ -54,6 +56,7 @@ def test_succes_recherche_comportant_la_raison_sociale(mocker):
         "denomination": "ENTREPRISE",
         "categorie_juridique_sirene": 5710,
         "code_pays_etranger_sirene": 99139,
+        "chiffre_affaires": None,
     }
     faked_request.assert_called_once_with(
         f"https://recherche-entreprises.api.gouv.fr/search?q={SIREN}&page=1&per_page=1",
@@ -77,6 +80,7 @@ def test_succes_recherche_sans_la_raison_sociale(mocker):
                         "tranche_effectif_salarie": "12",
                         "nature_juridique": "5710",
                         "siege": {"code_pays_etranger": None},
+                        "finances": {},
                     }
                 ],
             }
@@ -90,6 +94,7 @@ def test_succes_recherche_sans_la_raison_sociale(mocker):
         "denomination": "ENTREPRISE",
         "categorie_juridique_sirene": 5710,
         "code_pays_etranger_sirene": None,
+        "chiffre_affaires": None,
     }
 
 
@@ -213,6 +218,7 @@ def test_entreprise_inexistante_mais_pourtant_retournée_par_l_API(mocker):
                         "nombre_etablissements_ouverts": 0,
                         "siege": {},
                         "activite_principale": None,
+                        "finances": {},
                     }
                 ],
             }
@@ -249,6 +255,7 @@ def test_pas_de_nature_juridique(nature_juridique, mocker):
                         "tranche_effectif_salarie": "15",
                         "nature_juridique": nature_juridique,
                         "siege": {"code_pays_etranger": None},
+                        "finances": {},
                     }
                 ],
             }
@@ -281,6 +288,7 @@ def test_pas_de_code_pays_etranger(mocker):
                         "tranche_effectif_salarie": "15",
                         "nature_juridique": "5710",
                         "siege": {},
+                        "finances": {},
                     }
                 ],
             }
@@ -312,6 +320,7 @@ def test_code_pays_etranger_vaut_null_car_en_France(mocker):
                         "tranche_effectif_salarie": "15",
                         "nature_juridique": "5710",
                         "siege": {"code_pays_etranger": None},
+                        "finances": {},
                     }
                 ],
             }
@@ -323,3 +332,77 @@ def test_code_pays_etranger_vaut_null_car_en_France(mocker):
 
     assert not capture_message_mock.called
     assert infos["code_pays_etranger_sirene"] == None
+
+
+def test_un_chiffre_affaires_fourni(mocker):
+    SIREN = "123456789"
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "total_results": 1,
+                "results": [
+                    {
+                        "nom_complet": "ENTREPRISE",
+                        "nom_raison_sociale": None,
+                        "tranche_effectif_salarie": "15",
+                        "nature_juridique": "5710",
+                        "siege": {"code_pays_etranger": None},
+                        "finances": {
+                            "2022": {
+                                "ca": 1_000_000,
+                            }
+                        },
+                    }
+                ],
+            }
+
+    mocker.patch("requests.get", return_value=FakeResponse())
+    capture_message_mock = mocker.patch("sentry_sdk.capture_message")
+
+    infos = recherche(SIREN)
+
+    assert not capture_message_mock.called
+    assert infos["chiffre_affaires"] == CaracteristiquesAnnuelles.CA_ENTRE_900K_ET_50M
+
+
+def test_plusieurs_chiffres_affaires_fournis(mocker):
+    SIREN = "123456789"
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "total_results": 1,
+                "results": [
+                    {
+                        "nom_complet": "ENTREPRISE",
+                        "nom_raison_sociale": None,
+                        "tranche_effectif_salarie": "15",
+                        "nature_juridique": "5710",
+                        "siege": {"code_pays_etranger": None},
+                        "finances": {
+                            "2023": {
+                                "ca": 20_000_000,
+                            },
+                            "2022": {
+                                "ca": 800_000,
+                            },
+                            "2021": {
+                                "ca": 2_000_000_000,
+                            },
+                        },
+                    }
+                ],
+            }
+
+    mocker.patch("requests.get", return_value=FakeResponse())
+    capture_message_mock = mocker.patch("sentry_sdk.capture_message")
+
+    infos = recherche(SIREN)
+
+    assert not capture_message_mock.called
+    assert infos["chiffre_affaires"] == CaracteristiquesAnnuelles.CA_ENTRE_900K_ET_50M
