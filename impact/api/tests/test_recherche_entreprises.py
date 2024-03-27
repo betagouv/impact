@@ -21,7 +21,7 @@ def test_api_fonctionnelle():
         "denomination": "DIRECTION INTERMINISTERIELLE DU NUMERIQUE",
         "categorie_juridique_sirene": 7120,
         "code_pays_etranger_sirene": None,
-        "chiffre_affaires": None,
+        "tranche_chiffre_affaires": None,
     }
 
 
@@ -56,7 +56,7 @@ def test_succes_recherche_comportant_la_raison_sociale(mocker):
         "denomination": "ENTREPRISE",
         "categorie_juridique_sirene": 5710,
         "code_pays_etranger_sirene": 99139,
-        "chiffre_affaires": None,
+        "tranche_chiffre_affaires": None,
     }
     faked_request.assert_called_once_with(
         f"https://recherche-entreprises.api.gouv.fr/search?q={SIREN}&page=1&per_page=1",
@@ -94,7 +94,7 @@ def test_succes_recherche_sans_la_raison_sociale(mocker):
         "denomination": "ENTREPRISE",
         "categorie_juridique_sirene": 5710,
         "code_pays_etranger_sirene": None,
-        "chiffre_affaires": None,
+        "tranche_chiffre_affaires": None,
     }
 
 
@@ -365,7 +365,10 @@ def test_un_chiffre_affaires_fourni(mocker):
     infos = recherche(SIREN)
 
     assert not capture_message_mock.called
-    assert infos["chiffre_affaires"] == CaracteristiquesAnnuelles.CA_ENTRE_900K_ET_50M
+    assert (
+        infos["tranche_chiffre_affaires"]
+        == CaracteristiquesAnnuelles.CA_ENTRE_900K_ET_50M
+    )
 
 
 def test_plusieurs_chiffres_affaires_fournis(mocker):
@@ -405,4 +408,7 @@ def test_plusieurs_chiffres_affaires_fournis(mocker):
     infos = recherche(SIREN)
 
     assert not capture_message_mock.called
-    assert infos["chiffre_affaires"] == CaracteristiquesAnnuelles.CA_ENTRE_900K_ET_50M
+    assert (
+        infos["tranche_chiffre_affaires"]
+        == CaracteristiquesAnnuelles.CA_ENTRE_900K_ET_50M
+    )

@@ -101,7 +101,7 @@ def recherche(siren):
             "denomination": denomination,
             "categorie_juridique_sirene": categorie_juridique_sirene,
             "code_pays_etranger_sirene": code_pays_etranger,
-            "chiffre_affaires": chiffre_affaires,
+            "tranche_chiffre_affaires": chiffre_affaires,
         }
     elif response.status_code == 429:
         raise TooManyRequestError(TOO_MANY_REQUESTS_ERROR)

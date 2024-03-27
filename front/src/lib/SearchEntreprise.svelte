@@ -55,7 +55,7 @@
             if (codePaysEtrangerField) {
                 codePaysEtrangerField.value = json.code_pays_etranger_sirene
             }
-            if (trancheChiffreAffairesField && json.chiffre_affaires) {
+            if (trancheChiffreAffairesField && json.tranche_chiffre_affaires) {
                 //                             ^ si l'API ne renvoie pas de chiffre
                 //                               d'affaires, ne pas préremplir le champ
                 //                               pour garder le label par défaut
